@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["omitApi"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id                     Int                 @id @default(autoincrement())
+  email                  String              @unique
+  username               String
+  password               String
+  role                   Role                @default(USER)
+  cart                   Cart?
+}
+
+
+model Product {
+  id                          Int            @id @default(autoincrement())
+  name                        String         @unique
+  price                       Decimal        @db.Decimal(10, 2)
+  sale_price                  Decimal?       @db.Decimal(10, 2)
+  image                       String         @default("https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-image_large.png?v=1530129081") //just an example url
+  available_qty               Int
+
+  product_items CartItem[]
+}
+
+
+model CartItem {
+  id                Int           @id @default(autoincrement())
+  product           Product       @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id        Int
+  quantity          Int
+  cart_id           Int           
+  cart              Cart          @relation(fields: [cart_id], references: [id], onDelete: Cascade)
+
+  @@unique([product_id, cart_id]) 
+}
+
+
+model Cart {
+  id Int @id @default(autoincrement())
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id Int @unique
+  cart_items CartItem[]
+}
+
+
+enum Role {
+  USER
+  ADMIN
+}
